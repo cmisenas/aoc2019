@@ -11,14 +11,14 @@ pub fn main() {
     println!("Answer 2 {}", answer2);
 }
 
-fn solve1(lines: &[f32]) -> u32 {
+fn solve1(lines: &[i32]) -> u32 {
     lines
         .iter()
-        .map(|module| (module / 3f32).floor() as u32 - 2)
+        .map(|module| (*module as f32 / 3f32).floor() as u32 - 2)
         .sum()
 }
 
-fn solve2(lines: &[f32]) -> u32 {
+fn solve2(lines: &[i32]) -> u32 {
     lines
         .iter()
         .map(|module| {
@@ -36,24 +36,13 @@ fn solve2(lines: &[f32]) -> u32 {
         .sum()
 }
 
-fn read_lines_as_str<P>(filename: P) -> Vec<String>
+fn read_lines_as_int<P>(filename: P) -> Vec<i32>
 where
     P: AsRef<Path>,
 {
     let file = File::open(filename).expect("no such file");
     let buf = io::BufReader::new(file);
     buf.lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect()
-}
-
-fn read_lines_as_int<P>(filename: P) -> Vec<f32>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename).expect("no such file");
-    let buf = io::BufReader::new(file);
-    buf.lines()
-        .map(|l| l.expect("Could not parse line").parse::<f32>().unwrap())
+        .map(|l| l.expect("Could not parse line").parse::<i32>().unwrap())
         .collect()
 }
