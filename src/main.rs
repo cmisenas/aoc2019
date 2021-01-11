@@ -25,6 +25,7 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
+mod intcode_computer;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

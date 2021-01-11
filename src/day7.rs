@@ -136,7 +136,7 @@ fn solve1(program: Vec<i32>) -> (String, i32) {
             let mut module = AmplifierController::new(0, program.clone(), *phase_setting, result);
             result = module.run_program();
         }
-        results.insert(seq.iter().map(|s| s.to_string()).join(""), result);
+        results.insert(seq.iter().map(|s| s.to_string()).join(","), result);
     }
     let result = results.iter().max_by(|a, b| a.1.cmp(b.1)).unwrap();
     (result.0.to_string(), *result.1)
@@ -148,13 +148,11 @@ fn solve2(mut program: Vec<i32>) -> (String, i32) {
     let init = 0;
     for (seq_i, seq2) in second_half.into_iter().enumerate() {
         let mut result = init;
-        let mut seq_id = String::from("");
         let mut modules = Vec::new();
         for (i, phase_setting) in seq2.iter().enumerate() {
             let mut module = AmplifierController::new(i, program.clone(), *phase_setting, result);
             result = module.run_program();
             modules.push(module);
-            seq_id.push_str(&phase_setting.to_string());
         }
         let mut module_i = 0;
         while !modules[4].has_halted {
@@ -163,7 +161,7 @@ fn solve2(mut program: Vec<i32>) -> (String, i32) {
             module_i = (module_i + 1) % 5;
         }
         result = modules[4].run_program();
-        results.insert(seq_id, result);
+        results.insert(seq2.iter().map(|a| a.to_string()).join(","), result);
     }
     let result = results.iter().max_by(|a, b| a.1.cmp(b.1)).unwrap();
     (result.0.to_string(), *result.1)
