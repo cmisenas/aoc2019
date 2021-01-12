@@ -22,7 +22,7 @@ pub fn main() {
     let answer2 = solve2(program.clone());
     println!("Day 11 answers");
     println!("Answer 1 {}", answer1);
-    println!("Answer 2 {}", answer2);
+    println!("Answer 2\n{}", answer2);
 }
 
 fn solve1(mut program: Vec<i64>) -> usize {
@@ -76,8 +76,65 @@ fn turn_dir(start_dir: Direction, clockwise: bool) -> Direction {
     }
 }
 
-fn solve2(mut program: Vec<i64>) -> i64 {
-    0
+fn solve2(mut program: Vec<i64>) -> String {
+    let mut painted_panels: HashMap<(i16, i16), i8> = HashMap::new();
+    let mut robot_coordinate = (0, 0);
+    painted_panels.insert(robot_coordinate.clone(), 1i8);
+    let mut robot_direction = Direction::North;
+    let mut robot_computer = IntcodeComputer::new(0, program.clone(), 0);
+    while !robot_computer.has_halted {
+        if let Some(panel_paint) = painted_panels.get(&robot_coordinate) {
+            if *panel_paint == 0i8 {
+                robot_computer.input = 0;
+            } else {
+                robot_computer.input = 1;
+            }
+        } else {
+            robot_computer.input = 0;
+        }
+        let paint = robot_computer.run_program();
+        let turn = robot_computer.run_program();
+        painted_panels.insert(robot_coordinate.clone(), paint as i8);
+
+        robot_direction = turn_dir(robot_direction, turn == 1);
+        robot_coordinate = match robot_direction {
+            Direction::North => (robot_coordinate.0, robot_coordinate.1 - 1),
+            Direction::East => (robot_coordinate.0 + 1, robot_coordinate.1),
+            Direction::South => (robot_coordinate.0, robot_coordinate.1 + 1),
+            Direction::West => (robot_coordinate.0 - 1, robot_coordinate.1),
+        }
+    }
+    let white_panels = painted_panels
+        .iter()
+        .filter_map(|(panel, paint)| match paint {
+            1 => Some((panel.0 as usize, panel.1 as usize)),
+            _ => None,
+        })
+        .collect::<Vec<(usize, usize)>>();
+    let end_width = white_panels
+        .iter()
+        .max_by(|panel_a, panel_b| panel_a.0.cmp(&panel_b.0))
+        .unwrap()
+        .0 as usize
+        + 1;
+    let end_height = white_panels
+        .iter()
+        .max_by(|panel_a, panel_b| panel_a.1.cmp(&panel_b.1))
+        .unwrap()
+        .1 as usize;
+    let mut registration: Vec<Vec<char>> = Vec::new();
+    for _ in 0..=end_height {
+        registration.push(vec![' '; end_width]);
+    }
+    for panel in white_panels.into_iter() {
+        registration[panel.1][panel.0] = '#';
+    }
+
+    registration
+        .iter()
+        .map(|line| line.into_iter().collect::<String>())
+        .collect::<Vec<String>>()
+        .join("\n")
 }
 
 fn read_lines_as_str<P>(filename: P) -> Vec<String>
