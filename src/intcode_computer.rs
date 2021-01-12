@@ -1,14 +1,14 @@
 #[derive(Debug)]
 pub struct IntcodeComputer {
-    id: usize,
-    program: Vec<i64>,
-    memory: Vec<i64>,
-    input: i64,
-    index: usize,
-    has_halted: bool,
-    diagnostics_code: i64,
-    use_phase: bool,
-    relative_base: i64,
+    pub id: usize,
+    pub program: Vec<i64>,
+    pub memory: Vec<i64>,
+    pub input: i64,
+    pub index: usize,
+    pub has_halted: bool,
+    pub diagnostics_code: i64,
+    pub use_phase: bool,
+    pub relative_base: i64,
 }
 
 impl IntcodeComputer {
