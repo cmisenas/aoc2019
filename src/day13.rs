@@ -12,31 +12,39 @@ pub fn main() {
         .split(",")
         .map(|l| l.parse::<i64>().unwrap())
         .collect::<Vec<i64>>();
-    let answer1 = solve1(program.clone());
-    let answer2 = solve2(program.clone());
+    let objects = solve1(program.clone());
+    let answer1 = objects[2].len();
+    let answer2 = solve2(objects.clone(), program.clone());
     println!("Day 13 answers");
     println!("Answer 1 {}", answer1);
     println!("Answer 2 {}", answer2);
 }
 
-fn solve1(mut program: Vec<i64>) -> usize {
+fn solve1(mut program: Vec<i64>) -> Vec<HashSet<(usize, usize)>> {
     let mut computer = IntcodeComputer::new(0, program.clone(), 0);
-    let mut objects: HashMap<(i64, i64), i64> = HashMap::new();
+    /**
+     * 0 - empty tile
+     * 1 - wall tile
+     * 2 - block tile
+     * 3 - horizontal paddle
+     * 4 - ball tile
+     */
+    let mut objects = vec![HashSet::new(); 5];
     while !computer.has_halted {
         let x = computer.run_program();
         let y = computer.run_program();
         let obj = computer.run_program();
-        objects.insert((x, y), obj);
+        objects[obj as usize].insert((x as usize, y as usize));
     }
-    objects.iter().filter(|(_, obj)| **obj == 2).count()
+    objects.clone()
 }
 
-fn solve2(mut program: Vec<i64>) -> i64 {
+fn solve2(mut objects: Vec<HashSet<(usize, usize)>>, mut program: Vec<i64>) -> i64 {
     program[0] = 2;
     let mut computer = IntcodeComputer::new(0, program.clone(), 0);
     let mut score = 0;
-    let mut paddle_pos = 0;
-    let mut ball_pos = 0;
+    let mut paddle_pos = objects[3].iter().nth(0).unwrap().clone();
+    let mut ball_pos = objects[4].iter().nth(0).unwrap().clone();
     while !computer.has_halted {
         let x = computer.run_program();
         let y = computer.run_program();
@@ -44,21 +52,73 @@ fn solve2(mut program: Vec<i64>) -> i64 {
         if x == -1 && y == 0 {
             score = val;
         } else {
+            let new_pos = (x as usize, y as usize);
             if val == 3 {
-                paddle_pos = x;
+                objects[3].clear();
+                objects[3].insert(new_pos);
+                paddle_pos = new_pos;
             } else if val == 4 {
-                ball_pos = x;
+                objects[4].clear();
+                objects[4].insert(new_pos);
+                // Remove block tile if any
+                objects[2].remove(&new_pos);
+                ball_pos = new_pos;
             }
-            if paddle_pos < ball_pos {
+
+            if paddle_pos.0 < ball_pos.0 {
                 computer.input = 1;
-            } else if paddle_pos > ball_pos {
+            } else if paddle_pos.0 > ball_pos.0 {
                 computer.input = -1;
             } else {
                 computer.input = 0;
             }
         }
+        draw_game(&objects, score);
     }
     score
+}
+
+fn draw_game(objects: &Vec<HashSet<(usize, usize)>>, score: i64) {
+    use std::{thread, time};
+    let height = objects[1]
+        .iter()
+        .max_by(|(_, y1), (_, y2)| y1.cmp(y2))
+        .unwrap()
+        .1
+        + 1;
+    let width = objects[1]
+        .iter()
+        .max_by(|(x1, _), (x2, _)| x1.cmp(x2))
+        .unwrap()
+        .0
+        + 1;
+    let mut game_state = vec![vec![' '; width as usize]; height as usize];
+    for (tile_type, obj) in objects.iter().enumerate() {
+        for pos in obj {
+            match tile_type {
+                0 => game_state[pos.1][pos.0] = ' ',
+                1 => game_state[pos.1][pos.0] = 'x',
+                2 => game_state[pos.1][pos.0] = '#',
+                3 => game_state[pos.1][pos.0] = '_',
+                4 => game_state[pos.1][pos.0] = 'o',
+                _ => (),
+            }
+        }
+    }
+    println!(
+        "{}\nScore: {}",
+        game_state
+            .iter()
+            .map(|row| row.iter().collect::<String>())
+            .collect::<Vec<String>>()
+            .join("\n"),
+        score
+    );
+    let five_millis = time::Duration::from_millis(5);
+    thread::sleep(five_millis);
+
+    // Clear screen and reset
+    print!("\x1B[2J\x1B[1;1H");
 }
 
 fn read_lines_as_str<P>(filename: P) -> Vec<String>
